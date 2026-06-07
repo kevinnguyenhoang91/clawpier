@@ -40,7 +40,7 @@ pub(crate) fn build_agent_chat_cmd(agent_type: &AgentType, session_id: &str, mes
         }
         AgentType::Hermes => {
             vec![
-                "hermes".to_string(),
+                "/usr/local/bin/hermes".to_string(),
                 "chat".to_string(),
                 "-Q".to_string(),
                 "-q".to_string(),
@@ -946,7 +946,7 @@ pub async fn clawhub_search_skills(
         // No query: list all bundled skills
         let args = match bot_agent_type {
             AgentType::OpenClaw => vec!["openclaw", "skills", "list"],
-            AgentType::Hermes => vec!["hermes", "skills", "list"],
+            AgentType::Hermes => vec!["/usr/local/bin/hermes", "skills", "list"],
         };
         let result = tokio::time::timeout(
             timeout_dur,
@@ -972,7 +972,7 @@ pub async fn clawhub_search_skills(
         // Search skill registry
         let args = match bot_agent_type {
             AgentType::OpenClaw => vec!["npx", "--yes", "clawhub", "search", &query, "--limit", "20"],
-            AgentType::Hermes => vec!["hermes", "skills", "search", &query],
+            AgentType::Hermes => vec!["/usr/local/bin/hermes", "skills", "search", &query],
         };
         let result = tokio::time::timeout(
             timeout_dur,
@@ -1324,7 +1324,7 @@ pub async fn clawhub_install_skill(
         AgentType::OpenClaw => vec![
             "npx", "--yes", "clawhub", "install", &skill_name, "--no-input",
         ],
-        AgentType::Hermes => vec!["hermes", "skills", "install", &skill_name],
+        AgentType::Hermes => vec!["/usr/local/bin/hermes", "skills", "install", &skill_name],
     };
     DockerManager::exec_in_container(&docker, &container_name, &args).await
 }
@@ -1351,7 +1351,7 @@ pub async fn clawhub_uninstall_skill(
         AgentType::OpenClaw => vec![
             "npx", "--yes", "clawhub", "uninstall", &skill_name, "--no-input",
         ],
-        AgentType::Hermes => vec!["hermes", "skills", "uninstall", &skill_name],
+        AgentType::Hermes => vec!["/usr/local/bin/hermes", "skills", "uninstall", &skill_name],
     };
     DockerManager::exec_in_container(&docker, &container_name, &args).await
 }
@@ -2521,7 +2521,7 @@ mod tests {
     #[test]
     fn build_agent_chat_cmd_hermes_basic() {
         let cmd = build_agent_chat_cmd(&AgentType::Hermes, "session-abc", "Hello world");
-        assert_eq!(cmd[0], "hermes");
+        assert_eq!(cmd[0], "/usr/local/bin/hermes");
         assert_eq!(cmd[1], "chat");
         assert_eq!(cmd[2], "-Q");
         assert_eq!(cmd[3], "-q");
@@ -2535,6 +2535,15 @@ mod tests {
         assert!(
             cmd.contains(&"--local".to_string()),
             "must use --local to avoid gateway dependency"
+        );
+    }
+
+    #[test]
+    fn build_agent_chat_cmd_hermes_uses_absolute_path() {
+        let cmd = build_agent_chat_cmd(&AgentType::Hermes, "s1", "hi");
+        assert_eq!(
+            cmd[0], "/usr/local/bin/hermes",
+            "Hermes must use absolute path so Docker exec finds it without shell PATH expansion"
         );
     }
 
