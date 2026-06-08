@@ -126,14 +126,15 @@ export interface ChatResponseChunk {
 
 // ── ClawHub skill types ──────────────────────────────────────────────
 
+export type SkillSource = "bundled" | "clawhub" | "hermes-hub";
+
 export interface Skill {
   name: string;
   description: string;
   author: string;
   version: string;
   installed: boolean;
-  /** "bundled" for local skills, "clawhub" for OpenClaw registry, "hermes-hub" for Hermes registry */
-  source: string;
+  source: SkillSource;
 }
 
 export interface SkillSearchResult {
@@ -148,6 +149,25 @@ export interface SkillRequirements {
   os?: string[];
   all_met?: boolean;
   error?: string;
+}
+
+export interface InspectData {
+  skill?: {
+    slug?: string;
+    displayName?: string;
+    summary?: string;
+    stats?: {
+      stars?: number;
+      downloads?: number;
+      installsAllTime?: number;
+      installsCurrent?: number;
+      versions?: number;
+    };
+    createdAt?: number;
+    updatedAt?: number;
+  };
+  latestVersion?: { version?: string; changelog?: string; license?: string | null };
+  owner?: { handle?: string; displayName?: string; image?: string };
 }
 
 export interface SystemResources {
